@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="aquastilla_softener",
+    description="Library to fetch data from Aquastilla softener from Viessmann API",
     version="0.1.2",
     license="GPL",
     author="Tomasz Szymanowicz",
