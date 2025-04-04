@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="aquastilla_softener",
-    version="0.1.0",
+    version="0.1.2",
     license="GPL",
     author="Tomasz Szymanowicz",
     author_email="alakdae@gmail.com",
