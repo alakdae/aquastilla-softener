@@ -1,5 +1,5 @@
 from .aquastilla import (
-    AquastillaSoftenerSoftener,
-    AquastillaSoftenerSoftenerData,
-    AquastillaSoftenerSoftenerState,
+    AquastillaSoftener,
+    AquastillaSoftenerData,
+    AquastillaSoftenerState,
 )
