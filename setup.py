@@ -6,7 +6,7 @@ setup(
     name="aquastilla_softener",
     description="Library to fetch data from Aquastilla softener from Viessmann API",
     long_description=long_description,
-    version="0.1.4",
+    version="0.1.5",
     license="GPL",
     author="Tomasz Szymanowicz",
     author_email="alakdae@gmail.com",
