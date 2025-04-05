@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-long_description = (this_directory / "README.md").read_text(encoding="utf-8")
+long_description = ("README.md").read_text(encoding="utf-8")
 
 setup(
     name="aquastilla_softener",
