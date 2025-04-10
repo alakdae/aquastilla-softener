@@ -137,13 +137,11 @@ class AquastillaSoftener:
             if response_settings.status_code != 200:
                 raise Exception(f"Failed to fetch device state: {response_settings.text}")
             data_settings = response_settings.json()
-            print(data_settings["timezone"])
             tz = pytz.timezone(data_settings["timezone"])
             timestamp_correct = tz.localize(datetime.fromisoformat(data["timestamp"].replace("+00:00", "")))
             expected_regeneration_date_correct = tz.localize(datetime.fromisoformat(data["expectedRegenerationDate"].replace("+00:00", "")))
             last_regeneration_correct = tz.localize(datetime.fromisoformat(device["lastRegeneration"].replace("+00:00", "")))
             service_mode_ending_time_correct = tz.localize(datetime.fromisoformat(data_settings["serviceModeEndingTime"].replace("+00:00", "")))
-            print(timestamp_correct)
             return AquastillaSoftenerData(
                 timestamp=timestamp_correct,
                 uuid=data["uuid"],
