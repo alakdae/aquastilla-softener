@@ -1,4 +1,5 @@
 import logging
+import pytz
 from enum import Enum, IntEnum
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -20,22 +21,54 @@ DEFAULT_USER_AGENT = "okhttp/4.9.1"
 class AquastillaSoftenerState(str, Enum):
     SOFTENING = "deviceStateSoftening"
     OFFLINE = "Offline"
-    
 
 @dataclass(frozen=True)
 class AquastillaSoftenerData:
+    # Core info
     timestamp: datetime
     uuid: str
     model: str
     state: AquastillaSoftenerState
+
+    # Salt info
     salt_level_percent: int
     salt_days_remaining: int
+    salt_days_max: int
+    minimum_salt_level_per_days: int
+
+    # Water usage/capacity
     water_available: float
     max_water_capacity: float
-    expected_regeneration_date: datetime
     current_water_usage: float
     today_water_usage: float
+
+    # Regeneration
+    expected_regeneration_date: datetime
     last_regeneration: datetime
+    regen_percentage: float
+
+    # Firmware
+    firmware_upgrade_percentage: float
+    is_update: bool
+
+    # Modes and flags
+    is_online: bool
+    service_mode: bool
+    water_flow: bool
+    vacation_mode: bool
+
+    # Water details
+    water_hardness: int
+    unit_of_volume: str
+    water_hardness_unit: str
+
+    # Flood alarm settings
+    flood_continuous_flow_time: int
+    flood_threshold: int
+    flood_max_flow: int
+
+    # Service info
+    service_mode_ending_time: datetime
 
     @property
     def water_available_liters(self) -> float:
@@ -100,8 +133,19 @@ class AquastillaSoftener:
             if response.status_code != 200:
                 raise Exception(f"Failed to fetch device state: {response.text}")
             data = response.json()
+            response_settings = session.get(f"{self._api_base_url}/device/{device['uuid']}/settings", headers=self._get_headers())
+            if response_settings.status_code != 200:
+                raise Exception(f"Failed to fetch device state: {response_settings.text}")
+            data_settings = response_settings.json()
+            print(data_settings["timezone"])
+            tz = pytz.timezone(data_settings["timezone"])
+            timestamp_correct = tz.localize(datetime.fromisoformat(data["timestamp"].replace("+00:00", "")))
+            expected_regeneration_date_correct = tz.localize(datetime.fromisoformat(data["expectedRegenerationDate"].replace("+00:00", "")))
+            last_regeneration_correct = tz.localize(datetime.fromisoformat(device["lastRegeneration"].replace("+00:00", "")))
+            service_mode_ending_time_correct = tz.localize(datetime.fromisoformat(data_settings["serviceModeEndingTime"].replace("+00:00", "")))
+            print(timestamp_correct)
             return AquastillaSoftenerData(
-                timestamp=datetime.fromisoformat(data["timestamp"]),
+                timestamp=timestamp_correct,
                 uuid=data["uuid"],
                 model=device["model"]["model"],
                 state=AquastillaSoftenerState(data["state"]),
@@ -109,9 +153,25 @@ class AquastillaSoftener:
                 salt_days_remaining=data["saltDays"],
                 water_available=data["waterLeft"],
                 max_water_capacity=data["waterLeftMax"],
-                expected_regeneration_date=datetime.fromisoformat(data["expectedRegenerationDate"]),
+                expected_regeneration_date=expected_regeneration_date_correct,
                 current_water_usage=data["currentWaterUsage"],
                 today_water_usage=data["todayWaterUsage"],
-                last_regeneration=datetime.fromisoformat(device["lastRegeneration"]),
+                last_regeneration=last_regeneration_correct,
+                is_online=data["isOnline"],
+                is_update = data["isUpdate"],
+                vacation_mode = data_settings["vacationMode"],
+                water_flow = data_settings["waterFlow"],
+                service_mode = data_settings["serviceMode"],
+                salt_days_max = data["saltDaysMax"],
+                regen_percentage = data["regenPercentage"],
+                firmware_upgrade_percentage = data["firmwareUpdatePercentage"],
+                water_hardness = data_settings["waterHardness"],
+                minimum_salt_level_per_days = data_settings["saltAlarmSettings"]["minimumSaltLevelPerDays"],
+                flood_continuous_flow_time = data_settings["floodAlarmSettings"]["continuousFlowTime"],
+                flood_threshold = data_settings["floodAlarmSettings"]["threshold"],
+                flood_max_flow = data_settings["floodAlarmSettings"]["maxFlow"],
+                unit_of_volume = data_settings["unitOfVolume"],
+                water_hardness_unit = data_settings["waterHardnessUnit"],
+                service_mode_ending_time = service_mode_ending_time_correct,
             )
 
