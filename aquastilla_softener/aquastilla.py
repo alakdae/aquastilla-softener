@@ -20,6 +20,12 @@ DEFAULT_USER_AGENT = "okhttp/4.9.1"
 
 class AquastillaSoftenerState(str, Enum):
     SOFTENING = "deviceStateSoftening"
+    CLOSED = "deviceStateClosed"
+    BRINEREFILL = "deviceStateRegenBrineRefill"
+    SALTDISSOLVE = "deviceStateRegenSaltDissolve"
+    REGENBACKWASH = "deviceStateRegenBackwash"
+    BRINECOLLECT = "deviceStateRegenBrineCollect"
+    FASTWASH = "deviceStateRegenFastwash"
     OFFLINE = "Offline"
 
 @dataclass(frozen=True)
@@ -173,3 +179,47 @@ class AquastillaSoftener:
                 service_mode_ending_time = service_mode_ending_time_correct,
             )
 
+    def close_water_valve(self, device: Dict):
+        with requests.Session() as session:
+            self._check_token(session)
+            url = f"{self._api_base_url}/device/{device['uuid']}/water_flow"
+            headers = self._get_headers()
+            headers["Content-Type"] = "application/json"
+            payload = str(0)
+            response = session.post(url, data=payload, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Failed to close water flow valve: {response.status_code} - {response.text}")
+    
+    def postpone_regeneration(self, device: Dict):
+        with requests.Session() as session:
+            self._check_token(session)
+            url = f"{self._api_base_url}/device/{device['uuid']}/delay_regeneration"
+            headers = self._get_headers()
+            headers["Content-Type"] = "application/json"
+            payload = ""
+            response = session.post(url, data=payload, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Failed to postpone regeneration: {response.status_code} - {response.text}")
+    
+    def force_regeneration(self, device: Dict):
+        with requests.Session() as session:
+            self._check_token(session)
+            url = f"{self._api_base_url}/device/{device['uuid']}/vacation_mode/force_regeneration"
+            headers = self._get_headers()
+            headers["Content-Type"] = "application/json"
+            payload = ""
+            response = session.post(url, data=payload, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Failed to force regeneration: {response.status_code} - {response.text}")
+    
+    def set_vacation_mode(self, device: Dict, value: int):
+        with requests.Session() as session:
+            self._check_token(session)
+            url = f"{self._api_base_url}/device/{device['uuid']}/vacation_mode"
+            headers = self._get_headers()
+            headers["Content-Type"] = "application/json"
+            payload = str(value)
+            response = session.post(url, data=payload, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Failed to set vacation mode: {response.status_code} - {response.text}")
+    

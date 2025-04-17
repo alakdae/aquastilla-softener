@@ -16,7 +16,7 @@ You can install the package using pip:
     print("Devices:")
         for device in devices:
         print(f"UUID: {device['uuid']}, Model: {device['model']['model']}")
-    
+
     if devices:
         for device in devices:
             device_data = softener.get_device_data(device)
@@ -32,10 +32,22 @@ You can install the package using pip:
             print(f"Today Water Usage: {device_data.today_water_usage_liters} l")
             print(f"Last Regeneration: {device_data.last_regeneration}")
 
+        softener.close_water_valve(device)
+        softener.set_vacation_mode(device, 1) # 0 - vacation_mode off, 1 - vacation_mode on
+        softener.postpone_regeneration(device)
+        softener.force_regeneration(device)
 
-# 🧠  Features
+# 🧠   Features
 
     ✅ Login to the Aquastilla cloud API
 
     ✅ Fetch current softener status
+
+    ✅ Set vacation mode
+
+    ✅ Close water valve (not possible to remotely open valve, need to open physically on the device)
+
+    ✅ Force regeneration
+
+    ✅ Postpone regeneration by 48h
 
