@@ -146,7 +146,16 @@ class AquastillaSoftener:
             tz = pytz.timezone(data_settings["timezone"])
             timestamp_correct = tz.localize(datetime.fromisoformat(data["timestamp"].replace("+00:00", "")))
             expected_regeneration_date_correct = tz.localize(datetime.fromisoformat(data["expectedRegenerationDate"].replace("+00:00", "")))
-            last_regeneration_correct = tz.localize(datetime.fromisoformat(device["deviceHistory"]["regeneration"].replace("+00:00", "")))
+            last_regeneration_raw = (
+                (device.get("deviceHistory") or {}).get("regeneration")
+                or device.get("lastRegeneration")
+            )
+
+            last_regeneration_correct = (
+                tz.localize(datetime.fromisoformat(last_regeneration_raw.replace("+00:00", "")))
+                if last_regeneration_raw
+                else None
+            )
             service_mode_ending_time_correct = tz.localize(datetime.fromisoformat(data_settings["serviceModeEndingTime"].replace("+00:00", "")))
             return AquastillaSoftenerData(
                 timestamp=timestamp_correct,
