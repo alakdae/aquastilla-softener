@@ -94,7 +94,7 @@ class AquastillaSoftenerData:
 
 class AquastillaSoftener:
     def __init__(
-        self, email: str, password: str, api_base_url: str = DEFAULT_API_BASE_URL, user_agent: str = DEFAULT_USER_AGENT
+        self, email: str, password: str, api_base_url: str = DEFAULT_API_BASE_URL, user_agent: str = DEFAULT_USER_AGENT, timeout: tuple[float, float] = (5, 15)
     ):
         self._email: str = email
         self._password: str = password
@@ -102,6 +102,7 @@ class AquastillaSoftener:
         self._user_agent: str = user_agent
         self._token: Optional[str] = None
         self._token_expiration: Optional[datetime] = None
+        self._timeout = timeout
 
     def _check_token(self, session: requests.Session):
         if self._token is None or (self._token_expiration and datetime.now(timezone.utc) > self._token_expiration):
@@ -112,6 +113,7 @@ class AquastillaSoftener:
             f"{self._api_base_url}/login",
             json={"emailOrPhone": self._email, "password": self._password},
             headers={"Content-Type": "application/json"},
+            timeout=self._timeout,
         )
         if response.status_code != 200:
             raise Exception(f"Authentication failed: {response.text}")
@@ -127,7 +129,7 @@ class AquastillaSoftener:
     def list_devices(self) -> list[Dict]:
         with requests.Session() as session:
             self._check_token(session)
-            response = session.get(f"{self._api_base_url}/device/all", headers=self._get_headers())
+            response = session.get(f"{self._api_base_url}/device/all", headers=self._get_headers(), timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to fetch devices: {response.text}")
             return response.json()
@@ -135,11 +137,11 @@ class AquastillaSoftener:
     def get_device_data(self, device: Dict) -> AquastillaSoftenerData:
         with requests.Session() as session:
             self._check_token(session)
-            response = session.get(f"{self._api_base_url}/device/{device['uuid']}/state", headers=self._get_headers())
+            response = session.get(f"{self._api_base_url}/device/{device['uuid']}/state", headers=self._get_headers(), timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to fetch device state: {response.text}")
             data = response.json()
-            response_settings = session.get(f"{self._api_base_url}/device/{device['uuid']}/settings", headers=self._get_headers())
+            response_settings = session.get(f"{self._api_base_url}/device/{device['uuid']}/settings", headers=self._get_headers(), timeout=self._timeout)
             if response_settings.status_code != 200:
                 raise Exception(f"Failed to fetch device state: {response_settings.text}")
             data_settings = response_settings.json()
@@ -195,7 +197,7 @@ class AquastillaSoftener:
             headers = self._get_headers()
             headers["Content-Type"] = "application/json"
             payload = str(0)
-            response = session.post(url, data=payload, headers=headers)
+            response = session.post(url, data=payload, headers=headers, timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to close water flow valve: {response.status_code} - {response.text}")
     
@@ -206,7 +208,7 @@ class AquastillaSoftener:
             headers = self._get_headers()
             headers["Content-Type"] = "application/json"
             payload = ""
-            response = session.post(url, data=payload, headers=headers)
+            response = session.post(url, data=payload, headers=headers, timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to postpone regeneration: {response.status_code} - {response.text}")
     
@@ -217,7 +219,7 @@ class AquastillaSoftener:
             headers = self._get_headers()
             headers["Content-Type"] = "application/json"
             payload = ""
-            response = session.post(url, data=payload, headers=headers)
+            response = session.post(url, data=payload, headers=headers, timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to force regeneration: {response.status_code} - {response.text}")
     
@@ -228,7 +230,7 @@ class AquastillaSoftener:
             headers = self._get_headers()
             headers["Content-Type"] = "application/json"
             payload = str(value)
-            response = session.post(url, data=payload, headers=headers)
+            response = session.post(url, data=payload, headers=headers, timeout=self._timeout)
             if response.status_code != 200:
                 raise Exception(f"Failed to set vacation mode: {response.status_code} - {response.text}")
     
